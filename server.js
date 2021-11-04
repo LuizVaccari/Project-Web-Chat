@@ -20,7 +20,15 @@ app.use(cors());
 const PORT = 3000;
 
 io.on('connection', (socket) => {
-  console.log('Alguém se conectou');
+  const createNickname = () => {
+    const random1 = Math.random().toString(36).substr(2, 8);
+    const random2 = Math.random().toString(36).substr(2, 8);
+    const createdNickname = `${random1}${random2}`;
+    return createdNickname;
+    };
+  const randomNickname = createNickname();
+  io.emit('createNickname', randomNickname);
+  console.log(`Alguém se conectou ${randomNickname}`);
   const date = moment().format('DD-MM-yyyy HH:mm:ss A');
   // https://www.horadecodar.com.br/2020/05/13/como-formatar-data-no-javascript-date-moment-js/
  
