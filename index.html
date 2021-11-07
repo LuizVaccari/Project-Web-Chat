@@ -37,7 +37,7 @@
       e.preventDefault();
       const chatMessage = input.value
       const nickname = sessionStorage.getItem('nickname');
-      socket.emit('message', { chatMessage, nickname });
+      socket.emit('message', { chatMessage, nickname }); // envia para o server
       input.value = '';
       return false
     })
@@ -70,7 +70,7 @@
     }
 
     //socket.on('welcomeMessage', (message) => createMessage(message))
-    socket.on('message', (message) => createMessage(message))
+    socket.on('message', (message) => createMessage(message)) // recebe do server e renderiza
     socket.on('createNickname', createdNickname => {
       sessionStorage.setItem('nickname', createdNickname)
       console.log(createdNickname)
