@@ -46,18 +46,29 @@ messageForm.addEventListener('submit', (e) => {
       return true;
     });
 
-const createMessage = (message) => {
+const createMessage = (chatMessage) => {
       const li = document.createElement('li');
-      li.innerText = message;
+      li.innerText = chatMessage;
       li.setAttribute(dataTestId, 'message');
       return messageUl.appendChild(li);
     };
 
-socket.on('message', (message) => createMessage(message)); // recebe do server e renderiza 
+socket.on('message', (chatMessage) => createMessage(chatMessage)); // recebe do server e renderiza 
+
+ const createOldMessage = (oldMessages) => {
+  oldMessages.map(({ chatMessage, nickname, date }) => {
+    const li = document.createElement('li');
+    li.innerText = (`${date} - ${nickname}: ${chatMessage}`);
+    li.setAttribute(dataTestId, 'message');
+    return messageUl.appendChild(li);
+  });
+};
+
+socket.on('oldMessages', (oldMessages) => createOldMessage(oldMessages));
 
 const createOnlineUserList = (onlineUsersList) => {
       onlineUsersUl.innerHTML = '';
-      onlineUsersList.forEach((user) => {
+      onlineUsersList.map((user) => {
         const li = document.createElement('li');
         li.setAttribute(dataTestId, 'online-user');
         li.innerText = user;
@@ -70,3 +81,7 @@ const createOnlineUserList = (onlineUsersList) => {
     };
 
     socket.on('onlineUserList', (onlineUsersList) => createOnlineUserList(onlineUsersList));
+    
+    window.onbeforeunload = () => {
+      socket.disconnect();
+    };

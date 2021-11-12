@@ -21,9 +21,9 @@ const messagesModel = require('./models/messagesModel');
 
 app.use(cors());
 
+app.use('/', express.static('./views'));
 app.set('view engine', 'ejs');
 app.set('views', './views');
-app.use('/', express.static('./views'));
 
 const PORT = 3000;
 
@@ -35,38 +35,36 @@ const createNickname = () => {
   return createdNickname;
   };
 
-const date = moment().format('DD-MM-yyyy HH:mm:ss A');
-
 // lista de usuários
 const usersList = {};
 
 const createRandonNickname = (socketId, randomNickname, socket) => {
   io.to(socketId).emit('createRandomNickname', { randomNickname, socketId });
   socket.on('randomNickToList', (randomNick) => {
-    usersList[socket.id] = randomNick; io.emit('onlineUserList', Object.values(usersList));
+    usersList[socket.id] = randomNick;
+    io.emit('onlineUserList', Object.values(usersList));
 });
-};
+}; 
 
 io.on('connection', async (socket) => {
-  const socketId = socket.id.toString();
-  const randomNickname = createNickname();
+  const socketId = socket.id.toString(); const randomNickname = createNickname();
   createRandonNickname(socketId, randomNickname, socket);
-  
   socket.on('disconnect', () => {
     delete usersList[socket.id]; io.emit('onlineUserList', Object.values(usersList));
   });
   socket.on('updatedNickname', (nickname) => {
     usersList[socket.id] = nickname; io.emit('onlineUserList', Object.values(usersList));
   });
-  const oldMessages = await messagesModel.getAll();
-  oldMessages.map((message) => {
-    const messageFormat = `${message.timestamp} - ${message.nickname}: ${message.message}`;
-    return io.to(socketId).emit('message', messageFormat);
-    });
-  socket.on('message', async ({ nickname, chatMessage }) => {  
-    await messagesModel.create(chatMessage, nickname, date);
-    io.emit('message', `${date} - ${nickname}: ${chatMessage}`);
+  socket.on('message', async ({ chatMessage, nickname }) => {
+    const date = moment().format('DD-MM-yyyy HH:mm:ss A');
+    io.emit('message', (`${date} - ${nickname}: ${chatMessage}`));
+    await messagesModel.create({ chatMessage, nickname, date });
   });
+  const getOldMessages = async () => { 
+    const oldMessages = await messagesModel.getAll();
+    return oldMessages;
+  };
+    io.emit('oldMessages', await getOldMessages());
 });
 
 app.get('/', (req, res) => {
